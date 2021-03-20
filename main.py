@@ -2,6 +2,7 @@ import os
 import json
 import re
 from Util import get_acronym, reserve_chinese, getHash
+from py2neo import Graph, Node
 
 cur_dir = '/'.join(os.path.abspath(__file__).split('/')[:-1])
 
@@ -10,7 +11,6 @@ class NameEntityRecognition:
     def __init__(self):
         self.data_path = os.path.join(cur_dir, 'data/data_example1.txt')
         self.nodes = []
-        self.idTable = dict()
         self.relations = []
 
     def read_nodes(self):
@@ -26,7 +26,6 @@ class NameEntityRecognition:
                     record_prescription = record['方名'] + '_' + id
                 if record_prescription in [node[1] for node in self.nodes]:
                     record_prescription += ''.join(re.findall(r'\d', record['就诊时间']))
-                    print(record_prescription)
                 self.addNode(record_prescription, '方剂')
 
                 if '中医诊断' in record:
@@ -37,7 +36,6 @@ class NameEntityRecognition:
                     for herb in record['组成'].split(","):
                         if bool(re.search(r'\d', herb)):
                             herb = re.search(r'([^\r\n]*?)[0-9]', herb).group(1)
-                        print(re.sub('[\\r\\n]', '', herb))
                         herb = re.sub('[\\r\\n]', '', herb)
                         self.addNode(herb, '草药')
                         self.relations.append([record_prescription, herb, '组成'])
@@ -47,6 +45,31 @@ class NameEntityRecognition:
         node = [getHash(entityName), entityName, type]
         if node not in self.nodes:
             self.nodes.append(node)
+
+
+class MedicalGraph:
+    def __init__(self):
+        self.g = Graph(
+            host='127.0.0.1',
+            http_port=7474,
+            user='neo4j',
+            password='123456')
+
+    def generate_nodes(self, nodes):
+        for node in nodes:
+            neo4j_node = Node(node[2], name=node[1], id=node[0])
+            self.g.create(neo4j_node)
+
+    def generate_relation(self, relations):
+        for relation in relations:
+            startName = relation[0]
+            endName = relation[1]
+            relType = relation[2]
+            query = "match(p),(q) where p.name='%s'and q.name='%s' create (p)-[rel:%s]->(q)" % (startName, endName, relType)
+            try:
+                self.g.run(query)
+            except Exception as e:
+                print(e)
 
 
 def outTriple(relation):
@@ -75,7 +98,7 @@ def outEdges(relations):
 if __name__ == '__main__':
     handler = NameEntityRecognition()
     relations, nodes = handler.read_nodes()
-    print(len(relations))
-    outNodes(nodes)
-    outEdges(relations)
-    print(nodes)
+
+    generateGraph = MedicalGraph()
+    generateGraph.generate_nodes(nodes)
+    generateGraph.generate_relation(relations)
