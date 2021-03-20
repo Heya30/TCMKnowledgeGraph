@@ -10,6 +10,7 @@ class NameEntityRecognition:
     def __init__(self):
         self.data_path = os.path.join(cur_dir, 'data/data_example1.txt')
         self.nodes = []
+        self.idTable = dict()
         self.relations = []
 
     def read_nodes(self):
@@ -36,7 +37,9 @@ class NameEntityRecognition:
                     for herb in record['组成'].split(","):
                         if bool(re.search(r'\d', herb)):
                             herb = re.search(r'([^\r\n]*?)[0-9]', herb).group(1)
-                        self.addNode(re.sub('[\\r\\n]', '', herb), '草药')
+                        print(re.sub('[\\r\\n]', '', herb))
+                        herb = re.sub('[\\r\\n]', '', herb)
+                        self.addNode(herb, '草药')
                         self.relations.append([record_prescription, herb, '组成'])
         return self.relations, self.nodes
 
@@ -55,17 +58,17 @@ def outTriple(relation):
 
 def outNodes(entities):
     f = open(os.path.join(cur_dir, 'result/node.txt'), 'w', encoding='utf-8')
-    f.write("node:ID,name,:LABEL\n")
+    f.write("node:ID|name|:LABEL\n")
     for line in entities:
-        f.write(line[0] + ',' + line[1] + ',' + line[2] + '\n')
+        f.write(line[0] + '|' + line[1] + '|' + line[2] + '\n')
     f.close()
 
 
 def outEdges(relations):
     f = open(os.path.join(cur_dir, 'result/edge.txt'), 'w', encoding='utf-8')
-    f.write(":START_ID,:END_ID,:TYPE\n")
+    f.write(":START_ID|:END_ID|:TYPE\n")
     for line in relations:
-        f.write(getHash(line[0]) + ',' + getHash(line[1]) + ',' + line[2] + '\n')
+        f.write(getHash(line[0]) + '|' + getHash(line[1]) + '|' + line[2] + '\n')
     f.close()
 
 
@@ -73,6 +76,6 @@ if __name__ == '__main__':
     handler = NameEntityRecognition()
     relations, nodes = handler.read_nodes()
     print(len(relations))
-    # outNodes(nodes)
-    # outEdges(relations)
+    outNodes(nodes)
+    outEdges(relations)
     print(nodes)
