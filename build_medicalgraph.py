@@ -73,14 +73,14 @@ class MedicalGraph:
 
 
 def outTriple(relation):
-    f = open(os.path.join(cur_dir, 'result/triple.txt'), 'w', encoding='utf-8')
+    f = open(os.path.join(cur_dir, 'dict/triple.txt'), 'w', encoding='utf-8')
     for line in relation:
         f.write(line[0] + ' ' + line[1] + ' ' + line[2] + '\n')
     f.close()
 
 
 def outNodes(entities):
-    f = open(os.path.join(cur_dir, 'result/node.txt'), 'w', encoding='utf-8')
+    f = open(os.path.join(cur_dir, 'dict/node.txt'), 'w', encoding='utf-8')
     f.write("node:ID|name|:LABEL\n")
     for line in entities:
         f.write(line[0] + '|' + line[1] + '|' + line[2] + '\n')
@@ -88,7 +88,7 @@ def outNodes(entities):
 
 
 def outEdges(relations):
-    f = open(os.path.join(cur_dir, 'result/edge.txt'), 'w', encoding='utf-8')
+    f = open(os.path.join(cur_dir, 'dict/edge.txt'), 'w', encoding='utf-8')
     f.write(":START_ID|:END_ID|:TYPE\n")
     for line in relations:
         f.write(getHash(line[0]) + '|' + getHash(line[1]) + '|' + line[2] + '\n')
