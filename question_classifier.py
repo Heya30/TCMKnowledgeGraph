@@ -34,7 +34,7 @@ class QuestionClassifier:
         self.cureway_qwds = ['怎么治疗', '如何医治', '怎么医治', '怎么治', '怎么医', '如何治', '医治方式', '疗法', '咋治', '怎么办', '咋办', '咋治', '开什么方', '什么方能治']
         self.cure_qwds = ['治疗什么', '治啥', '治疗啥', '医治啥', '治愈啥', '主治啥', '主治什么', '有什么用', '有何用', '用处', '用途',
                           '有什么好处', '有什么益处', '有何益处', '用来', '用来做啥', '用来作甚', '需要', '要', '治什么']
-        self.contain_qwds = ['包含什么', '有哪些', '组成']
+        self.contain_qwds = ['包含', '有哪些', '组成']
 
         print('model init finished ......')
 
@@ -44,7 +44,6 @@ class QuestionClassifier:
     def classify(self, question):
         data = {}
         medical_dict = self.check_medical(question)
-        print(medical_dict)
         if not medical_dict:
             return {}
         data['args'] = medical_dict
@@ -113,7 +112,6 @@ class QuestionClassifier:
             for wd2 in region_wds:
                 if wd1 in wd2 and wd1 != wd2:
                     stop_wds.append(wd1)
-                    print('stop_wds' + wd1)
 
         final_wds = [i for i in region_wds if i not in stop_wds]
         final_dict = {i:self.wdtype_dict.get(i) for i in final_wds}
@@ -130,7 +128,6 @@ class QuestionClassifier:
 
 if __name__ == '__main__':
     handler = QuestionClassifier()
-    while 1:
-        question = input('input an question:')
-        data = handler.classify(question)
-        print(data)
+
+    data = handler.classify("丹参可以用来治什么病，痛经可以吃什么")
+    print(data)
