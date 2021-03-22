@@ -69,12 +69,6 @@ class QuestionClassifier:
             question_type = 'herb_disease'
             question_types.append(question_type)
 
-
-        # 若没有查到相关的外部查询信息，那么则将该疾病的描述信息返回
-        if question_types == [] and 'disease' in types:
-            question_types = ['disease_prescription']
-
-
         # 将多个分类结果进行合并处理，组装成一个字典
         data['question_types'] = question_types
 
