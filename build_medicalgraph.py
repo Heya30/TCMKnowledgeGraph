@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import os
 import json
 import re
@@ -22,6 +23,7 @@ class NameEntityRecognition:
             if '医案' in value:
                 record = value['医案']
                 record_prescription = "方剂" + '_' + id
+
                 if '方名' in record:
                     record_prescription = record['方名'] + '_' + id
                 if record_prescription in [node[1] for node in self.nodes]:
@@ -31,15 +33,29 @@ class NameEntityRecognition:
                 if '中医诊断' in record:
                     record_diagnose = record['中医诊断']
                     self.addNode(record_diagnose, '疾病')
-                    self.relations.append([record_prescription, record_diagnose, '治疗'])
+                    self.relations.append([record_prescription, record_diagnose, '方剂', '疾病','治疗'])
+
+                    for property in ['舌质', '舌苔', '脉象', '中医证候', '西医诊断', '治则治法']:
+                        self.addDiseaseProperty(property, record, record_diagnose)
+
                 if '组成' in record:
                     for herb in record['组成'].split(","):
                         if bool(re.search(r'\d', herb)):
                             herb = re.search(r'([^\r\n]*?)[0-9]', herb).group(1)
                         herb = re.sub('[\\r\\n]', '', herb)
                         self.addNode(herb, '草药')
-                        self.relations.append([record_prescription, herb, '组成'])
+                        self.relations.append([record_prescription, herb, '方剂','草药','组成'])
+
         return self.relations, self.nodes
+
+    def addDiseaseProperty(self, property_name, record, record_diagnose):
+        if property_name in record:
+            context = re.split(r'[\s|，|[0-9]]', record[property_name])
+            for i in context:
+                i = reserve_chinese(i)
+                if i != '':
+                    self.addNode(i, property_name)
+                    self.relations.append([i, record_diagnose, property_name, '疾病', property_name])
 
     def addNode(self, entityName, type):
         node = [getHash(entityName), entityName, type]
@@ -64,8 +80,11 @@ class MedicalGraph:
         for relation in relations:
             startName = relation[0]
             endName = relation[1]
-            relType = relation[2]
-            query = "match(p),(q) where p.name='%s'and q.name='%s' create (p)-[rel:%s]->(q)" % (startName, endName, relType)
+            startType = relation[2]
+            endType = relation[3]
+            relType = relation[4]
+            query = "match(p:`%s`),(q:`%s`) where p.name='%s'and q.name='%s' create (p)-[rel:%s]->(q)" % (
+                startType, endType, startName, endName, relType)
             try:
                 self.g.run(query)
             except Exception as e:
@@ -101,4 +120,6 @@ if __name__ == '__main__':
 
     generateGraph = MedicalGraph()
     generateGraph.generate_nodes(nodes)
+    print("添加节点完毕")
     generateGraph.generate_relation(relations)
+    print("添加边完毕")

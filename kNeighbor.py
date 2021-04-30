@@ -2,19 +2,24 @@ from neo4j import GraphDatabase
 import faiss
 import numpy
 from sklearn.neighbors import NearestNeighbors
+import os
+
+cur_dir = '/'.join(os.path.abspath(__file__).split('/')[:-1])
 driver = GraphDatabase.driver("bolt://localhost", auth=("neo4j", "123456"))
 
 dict = dict()
 embedding = []
+disease = []
 with driver.session(database="test01.db") as session:
     result = session.run("""
-    MATCH (n)
+    MATCH (n:`疾病`)
     RETURN n.name AS name, n.embeddingNode2vec AS embedding
     """)
     for record in result:
         embedding.append([record["name"],  record["embedding"]])
+        # print(record["embedding"])
+        # dict[record["embedding"]] = record["name"]
 
-print(embedding[0])
 
 vec = []
 for record in embedding:
@@ -36,8 +41,21 @@ def faissNeighbor():
     for i in I[0]:
         print(embedding[i])
 
-def sklearn():
-    nbrs = NearestNeighbors(n_neighbors=10, algorithm='ball_tree').fit(vec)
-    distances, indices = nbrs.kneighbors(vec[:1])
+def sklearn(disease):
+    nbrs = NearestNeighbors(n_neighbors=11, algorithm='ball_tree').fit(vec)
+    var = vec[disease].reshape(1, -1)
+    distances, indices = nbrs.kneighbors(var)
+    print("distance:")
     print(distances)
     print(indices)
+    for i in indices[0]:
+        print(embedding[i][0])
+
+def out():
+    f = open(os.path.join(cur_dir, 'dict/diseaseEmbedding.txt'), 'w', encoding='utf-8')
+    for index in range(0, len(embedding)):
+        f.write(str(index) + ' ' + embedding[index][0] +'\n')
+    f.close()
+
+sklearn(64)
+out()
