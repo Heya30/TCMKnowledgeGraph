@@ -42,7 +42,7 @@ def faissNeighbor():
         print(embedding[i])
 
 def sklearn(disease):
-    nbrs = NearestNeighbors(n_neighbors=11, algorithm='ball_tree').fit(vec)
+    nbrs = NearestNeighbors(n_neighbors=21, algorithm='ball_tree').fit(vec)
     var = vec[disease].reshape(1, -1)
     distances, indices = nbrs.kneighbors(var)
     print("distance:")
@@ -57,5 +57,5 @@ def out():
         f.write(str(index) + ' ' + embedding[index][0] +'\n')
     f.close()
 
-sklearn(64)
+sklearn(81)
 out()
